@@ -3,22 +3,17 @@ and independently hosted websites. Bug bounty platforms are websites through whi
 
 - Some of the largest bug bounty platforms are HackerOne, Bugcrowd, Intigriti, Synack, and Cobalt.
 
-- On the other hand, many organizations host and manage their bug
-bounty programs without the help of platforms. Companies like Google,
-Facebook, Apple, and Medium do this. You can find their bug bounty policy
-pages by visiting their websites, or by searching “CompanyName bug bounty
-program” online.
+- On the other hand, many organizations host and manage their bug bounty programs without the help of platforms. Companies like Google, Facebook, Apple, and Medium do this. You can find their bug bounty policy
+pages by visiting their websites, or by searching “CompanyName bug bounty program” online.
 
 - The Pros : 
-1- The best thing about bug bounty platforms is that they provide a lot of
-transparency into a company’s process, because they post disclosed reports,
-metrics about the programs’ triage rates, payout amounts, and response
-times. 
+1- The best thing about bug bounty platforms is that they provide a lot of transparency into a company’s process, because they post disclosed reports,
+metrics about the programs’ triage rates, payout amounts, and response times. 
 
 2- Bug bounty programs also often have reputation systems that allow you to showcase your experience so you can gain access to invite-only bug bounty programs.
 
-3- Another pro of bug bounty platforms is that they often step in to provide
-conflict resolution and legal protection as a third party. If you submit a report to a non-platform program, you have no recourse in the final bounty decision.
+3- Another pro of bug bounty platforms is that they often step in to provide conflict resolution and legal protection as a third party. 
+If you submit a report to a non-platform program, you have no recourse in the final bounty decision.
 
 - The Cons : 
 1- some hackers avoid bug bounty platforms because they dislike how those platforms deal with reports. Reports submitted to platform managed bug bounty programs often get handled by triagers, third-party employees who often aren’t familiar with all the security details about a company’s product
