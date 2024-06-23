@@ -1,0 +1,91 @@
+- The way the browser redirects the user depends on how the browser differentiates between these components:
+scheme://userinfo@hostname:port/path?query#fragment
+
+- The URL validator needs to predict how the browser will redirect the user and reject URLs that will result in a redirect offsite
+
+- However, URLs don’t always follow the strict format shown in this example. They can be malformed, have their components out of order, contain characters that the browser does not know how to decode, or have extra or missing components. For example, how would the browser redirect this URL? https://user:password:8080/example.com@attacker.com
+
+- When you visit this link in different browsers, you will see that different browsers handle this URL differently. Sometimes validators don’t account for all the edge cases that can cause the browser to behave unexpectedly.
+
+- Using Browser Autocorrect :
+
+-> You can use browser autocorrect features to construct alternative URLs that redirect offsite
+
+-> For example, Chrome will interpret all of these URLs as pointing to https://attacker.com:
+https:attacker.com
+https;attacker.com
+https:\/\/attacker.com
+https:/\/\attacker.com
+
+-> These quirks can help you bypass URL validation based on a blocklist. For example, if the validator rejects any redirect URL that contains the
+strings https:// or http://, you can use an alternative string, like https;, to achieve the same results.
+
+-> If the validator doesn’t recognize this behavior, the inconsistency could lead to bugs. For example, the following URL is potentially problematic:
+https://attacker.com\@example.com
+
+-> Unless the validator treats the backslash as a path separator, it will interpret the hostname to be example.com, and treat attacker.com\ as the username portion of the URL. But if the browser autocorrects the backslash to a forward slash, it will redirect the user to attacker.com, and treat @example.com as the path portion of the URL, forming the following valid URL:
+https://attacker.com/@example.com
+
+- Exploiting Flawed Validator Logic : 
+
+-> Another way you can bypass the open-redirect validator is by exploiting loopholes in the validator’s logic. For example, as a common defense against open redirects, the URL validator often checks if the redirect URL starts with, contains, or ends with the site’s domain name
+
+-> You can bypass this type of protection by creating a subdomain or directory with the target’s domain name:
+https://example.com/login?redir=http://example.com.attacker.com
+https://example.com/login?redir=http://attacker.com/example.com
+
+-> To prevent attacks like these from succeeding, the validator might accept only URLs that both start and end with a domain listed on the allowlist. However, it’s possible to construct a URL that satisfies both of these rules. Take a look at this one:
+https://example.com/login?redir=https://example.com.attacker.com/example.com
+
+-> his URL redirects to attacker.com, despite beginning and ending with the target domain. The browser will interpret the first example.com as the
+subdomain name and the second one as the filepath. Or you could use the at symbol (@) to make the first example.com the username portion of the URL:
+https://example.com/login?redir=https://example.com@attacker.com/example.com
+
+- Using Data URLs :
+
+-> You can also manipulate the scheme portion of the URL to fool the validator.
+
+-> URLs use the data: scheme to embed small files in a URL. They are constructed in this format: data:MEDIA_TYPE[;base64],DATA
+
+-> For example, you can send a plaintext message with the data scheme like this: data:text/plain,hello!
+
+-> The optional base64 specification allows you to send base64-encoded messages. For example, this is the base64-encoded version of the preceding message: data:text/plain;base64,aGVsbG8h
+
+-> You can use the data: scheme to construct a base64-encoded redirect URL that evades the validator. For example, this URL will redirect to
+example.com: data:text/html;base64,
+PHNjcmlwdD5sb2NhdGlvbj0iaHR0cHM6Ly9leGFtcGxlLmNvbSI8L3NjcmlwdD4=
+
+-> The data encoded in this URL, PHNjcmlwdD5sb2NhdGlvbj0iaHR0cHM6Ly9leGFtcGxlLmNvbSI8L3NjcmlwdD4=, is the base64-encoded version of this script: <script>location="https://example.com"</script>
+
+-> This is a piece of JavaScript code wrapped between HTML <script> tags. It sets the location of the browser to https://example.com, forcing the browser to redirect there. You can insert this data URL into the redirection parameter to bypass blocklists:
+https://example.com/login?redir=data:text/html;base64, PHNjcmlwdD5sb2NhdGlvbj0iaHR0cHM6Ly9leGFtcGxlLmNvbSI8L3NjcmlwdD4=
+
+- Exploiting URL Decoding :
+
+-> URL encoding converts a character into a percentage sign, followed by two hex digits; for example, %2f. This is the URL-encoded version of the slash character (/).
+
+-> When validators validate URLs, or when browsers redirect users, they have to first find out what is contained in the URL by decoding any characters that are URL encoded. If there is any inconsistency between how the validator and browsers decode URLs, you could exploit that to your advantage.
+
+- Double Encoding :
+
+-> try to double- or triple-URL-encode certain special characters in your payload. For example, you could URL-encode the slash character in https://example.com/@attacker.com. 
+
+-> Here is the URL with a URL-encoded slash: https://example.com%2f@attacker.com
+
+-> And here is the URL with a double-URL-encoded slash: https://example.com%252f@attacker.com
+
+-> Finally, here is the URL with a triple-URL-encoded slash: https://example.com%25252f@attacker.com
+
+- Non-ASCII Characters :
+
+-> You can sometimes exploit inconsistencies in the way the validator and browsers decode non-ASCII characters. For example, let’s say that this
+URL has passed URL validation: https://attacker.com%ff.example.com
+
+-> %ff is the character ÿ, which is a non-ASCII character. The validator has determined that example.com is the domain name, and attacker.comÿ is the subdomain name. Several scenarios could happen. Sometimes browsers decode non-ASCII characters into question marks. In this case, example.com
+would become part of the URL query, not the hostname, and the browser would navigate to attacker.com instead: https://attacker.com?.example.com
+
+- Combining Exploit Techniques :
+
+-> To defeat more-sophisticated URL validators, combine multiple strategies to bypass layered defenses. I’ve found the following payload to be useful: https://example.com%252f@attacker.com/example.com
+
+-> This URL bypasses protection that checks only that a URL contains, starts with, or ends with an allowlisted hostname by making the URL both start and end with example.com. Most browsers will interpret example.com%252f as the username portion of the URL. But if the validator over-decodes the URL, it will confuse example.com as the hostname portion: https://example.com/@attacker.com/example.com
